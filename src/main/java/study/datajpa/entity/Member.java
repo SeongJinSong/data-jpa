@@ -8,6 +8,10 @@ import javax.persistence.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(of = {"id", "username", "age"})//team을 적으면 무한루프에 빠진다. 연관관계 필드는 toString을 빼라
+@NamedQuery(
+        name="Member.findByUsername",
+        query="select m from Member m where m.username = :username"
+)
 public class Member {
     @Id @GeneratedValue
     @Column(name="member_id")

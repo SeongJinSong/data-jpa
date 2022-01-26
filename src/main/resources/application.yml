@@ -4,14 +4,22 @@ spring:
   username: sa
   password:
   driver-class-name: org.h2.Driver
-jpa:
-  hibernate:
-    ddl-auto: create
-  properties:
+
+  jpa:
     hibernate:
-      show_sql: true
-      format_sql: true
+      ddl-auto: create
+    properties:
+      hibernate:
+        #dialect: org.hibernate.dialect.Oracle10gDialect
+        #show_sql: true
+        format_sql: true
+  data:
+    web:
+      pageable:
+        default-page-size: 10
+        max-page-size: 1000
+#        one-indexed-parameters: true
 
 logging.level:
   org.hibernate.SQL: debug
-  org.hibernate.type: trace
+  #org.hibernate.type: trace

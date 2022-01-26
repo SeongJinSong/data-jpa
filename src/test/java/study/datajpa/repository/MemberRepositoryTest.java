@@ -3,12 +3,17 @@ package study.datajpa.repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
+import java.awt.print.Pageable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -161,4 +166,122 @@ class MemberRepositoryTest {
         System.out.println("optAAA = " + optAAA.get());
     }
 
+    @Test
+    public void paging_Page(){
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+
+        int age = 10;
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+
+        //when
+        Page<Member> page = memberRepository.findByAge(age, pageRequest);
+
+        //then
+        List<Member> content = page.getContent();
+        long totalElements = page.getTotalElements();
+        for (Member member : content) {
+            System.out.println("member = " + member);
+        }
+        System.out.println("totalElements = " + totalElements);
+
+        assertThat(content.size()).isEqualTo(3);
+        assertThat(page.getTotalElements()).isEqualTo(5);
+        assertThat(page.getNumber()).isEqualTo(0);
+        assertThat(page.getTotalPages()).isEqualTo(2);
+        assertThat(page.isFirst()).isTrue();
+        assertThat(page.hasNext()).isTrue();
+    }
+
+    @Test
+    public void paging_Slice(){
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member1", 20));
+        memberRepository.save(new Member("member1", 30));
+        memberRepository.save(new Member("member1", 40));
+        memberRepository.save(new Member("member1", 50));
+
+        String username = "member1";
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+
+        //when
+        Slice<Member> page = memberRepository.findByUsername(username, pageRequest);
+
+        //then
+        List<Member> content = page.getContent();
+//        long totalElements = page.getTotalElements();
+        for (Member member : content) {
+            System.out.println("member = " + member);
+        }
+//        System.out.println("totalElements = " + totalElements);
+
+        assertThat(content.size()).isEqualTo(3);
+//        assertThat(page.getTotalElements()).isEqualTo(5);
+        assertThat(page.getNumber()).isEqualTo(0);
+//        assertThat(page.getTotalPages()).isEqualTo(2);
+        assertThat(page.isFirst()).isTrue();
+        assertThat(page.hasNext()).isTrue();
+    }
+
+    @Test
+    void findByAge_splitTotalCount() {
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+
+        int age = 10;
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+
+        //when
+        Page<Member> page = memberRepository.findByAge_splitTotalCount(age, pageRequest);
+
+        //then
+        List<Member> content = page.getContent();
+        long totalElements = page.getTotalElements();
+        for (Member member : content) {
+            System.out.println("member = " + member);
+        }
+        System.out.println("totalElements = " + totalElements);
+
+        assertThat(content.size()).isEqualTo(3);
+        assertThat(page.getTotalElements()).isEqualTo(5);
+        assertThat(page.getNumber()).isEqualTo(0);
+        assertThat(page.getTotalPages()).isEqualTo(2);
+        assertThat(page.isFirst()).isTrue();
+        assertThat(page.hasNext()).isTrue();
+    }
+
+    @Test
+    void findByAge_pageToDto() {
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+
+        int age = 10;
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+
+        //when
+        Page<Member> page = memberRepository.findByAge_splitTotalCount(age, pageRequest);
+
+        /**
+         * Entity를 바로 반환하지 말고 Dto로 반환해야한다.
+         * 아래와 같이 쉽게 MemberDto로 반환할 수 있다.
+         */
+        Page<MemberDto> mapToDto = page.map(m -> new MemberDto(m.getId(), m.getUsername(), null));
+    }
 }

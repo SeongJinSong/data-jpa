@@ -13,6 +13,8 @@ import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.awt.print.Pageable;
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +29,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class MemberRepositoryTest {
     @Autowired MemberRepository memberRepository;
     @Autowired TeamRepository teamRepository;
+    @PersistenceContext
+    EntityManager em;
 
     @Test
     public void testMember(){
@@ -283,5 +287,34 @@ class MemberRepositoryTest {
          * 아래와 같이 쉽게 MemberDto로 반환할 수 있다.
          */
         Page<MemberDto> mapToDto = page.map(m -> new MemberDto(m.getId(), m.getUsername(), null));
+    }
+
+    @Test
+    void bulkAgePlus() {
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 19));
+        memberRepository.save(new Member("member3", 20));
+        memberRepository.save(new Member("member4", 21));
+        memberRepository.save(new Member("member5", 40));
+
+        //when
+        int resultCount = memberRepository.bulkAgePlus(20);
+        /**
+         * 벌크연산 후에는 영속성 컨텍스트 flush 및 clear를 해야 한다.
+         *  - 같은 트랜잭션에서 동일한 데이터를 참조하면 문제가 생긴다.
+         *
+         * 아니면 @Modifying(clearAutomatically = true)를 넣어야한다.
+         *  - 왠만하면 bulk연산 후에 로직 끝내라
+         */
+//        em.flush();
+//        em.clear();
+
+        List<Member> result = memberRepository.findByUsername("member5");
+        Member member5 = result.get(0);
+        System.out.println("member5 = " + member5);
+
+        //then
+        assertThat(resultCount).isEqualTo(3);
     }
 }
